@@ -12,13 +12,13 @@ public class MoviesResponse {
     @SerializedName("total_pages")
     private final Integer totalPages;
     @SerializedName("results")
-    private final ArrayList<Movie> movies;
+    private final Movie[] movies;
 
     public MoviesResponse(
             Integer page,
             Integer totalResults,
             Integer totalPages,
-            ArrayList<Movie> movies) {
+            Movie[] movies) {
         this.page = page;
         this.totalResults = totalResults;
         this.totalPages = totalPages;
@@ -37,7 +37,7 @@ public class MoviesResponse {
         return totalPages;
     }
 
-    public ArrayList<Movie> getMovies() {
+    public Movie[] getMovies() {
         return movies;
     }
 }

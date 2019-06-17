@@ -9,7 +9,7 @@ import com.example.android.movies.data.network.MoviesNetworkDataSource;
 import com.example.android.movies.data.entities.Movie;
 import com.example.android.movies.utilities.AppExecutors;
 
-import java.util.Date;
+import java.util.List;
 
 public class MoviesRepository {
 
@@ -40,6 +40,7 @@ public class MoviesRepository {
         networkData.observeForever(newMoviesFromNetwork -> {
             mExecutors.diskIO().execute(() -> {
                 // Insert our new movies data into Movies's database
+                // TODO: 2019-06-17 this looks wrong
                 mMoviesDao.bulkInsert(newMoviesFromNetwork);
                 Log.d(LOG_TAG, "New values inserted");
             });
@@ -82,6 +83,28 @@ public class MoviesRepository {
         });
     }
 
+
+    /**
+     * Database related operations
+     **/
+
+    public LiveData<List<Movie>> getMovies() {
+        initializeData();
+        return mMoviesDao.getMovies();
+    }
+
+    public LiveData<List<Movie>> getMoviesByPopularity() {
+        initializeData();
+        return mMoviesDao.getMoviesByPopularity();
+    }
+    public LiveData<List<Movie>> getMoviesByVoteCount() {
+        initializeData();
+        return mMoviesDao.getMoviesByVoteCount();
+    }
+    public LiveData<List<Movie>> getMoviesFavorites() {
+        initializeData();
+        return mMoviesDao.getMoviesFavorites();
+    }
     /**
      * Checks if there are enough days of future weather for the app to display all the needed data.
      *
@@ -96,6 +119,7 @@ public class MoviesRepository {
      */
 
     private void startFetchMoviesService() {
+
         mMoviesNetworkDataSource.startFetchMoviesService();
     }
 }

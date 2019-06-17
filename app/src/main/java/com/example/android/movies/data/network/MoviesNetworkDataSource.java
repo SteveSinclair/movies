@@ -9,12 +9,18 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
 import com.example.android.movies.BuildConfig;
-import com.example.android.movies.R;
 import com.example.android.movies.data.entities.Movie;
 import com.example.android.movies.data.entities.MoviesResponse;
 import com.example.android.movies.utilities.AppExecutors;
 
-import java.net.URL;
+import com.firebase.jobdispatcher.Constraint;
+import com.firebase.jobdispatcher.Driver;
+import com.firebase.jobdispatcher.FirebaseJobDispatcher;
+import com.firebase.jobdispatcher.GooglePlayDriver;
+import com.firebase.jobdispatcher.Job;
+import com.firebase.jobdispatcher.Lifetime;
+import com.firebase.jobdispatcher.Trigger;
+
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -81,7 +87,51 @@ public class MoviesNetworkDataSource {
      * Schedules a repeating job service which fetches movies.
      */
     public void scheduleRecurringFetchMoviesSync() {
-        // TODO: 2019-06-14
+        Driver driver = new GooglePlayDriver(mContext);
+        FirebaseJobDispatcher dispatcher = new FirebaseJobDispatcher(driver);
+
+        // Create the Job to periodically sync Movies
+        Job syncMoviesJob = dispatcher.newJobBuilder()
+                /* The Service that will be used to sync Movie's data */
+                .setService(MoviesFirebaseJobService.class)
+                /* Set the UNIQUE tag used to identify this Job */
+                .setTag(MOVIES_SYNC_TAG)
+                /*
+                 * Network constraints on which this Job should run. We choose to run on any
+                 * network, but you can also choose to run only on un-metered networks or when the
+                 * device is charging. It might be a good idea to include a preference for this,
+                 * as some users may not want to download any data on their mobile plan. ($$$)
+                 */
+                .setConstraints(Constraint.ON_ANY_NETWORK)
+                /*
+                 * setLifetime sets how long this job should persist. The options are to keep the
+                 * Job "forever" or to have it die the next time the device boots up.
+                 */
+                .setLifetime(Lifetime.FOREVER)
+                /*
+                 * We want Sunshine's weather data to stay up to date, so we tell this Job to recur.
+                 */
+                .setRecurring(true)
+                /*
+                 * We want the weather data to be synced every 3 to 4 hours. The first argument for
+                 * Trigger's static executionWindow method is the start of the time frame when the
+                 * sync should be performed. The second argument is the latest point in time at
+                 * which the data should be synced. Please note that this end time is not
+                 * guaranteed, but is more of a guideline for FirebaseJobDispatcher to go off of.
+                 */
+                .setTrigger(Trigger.executionWindow(
+                        SYNC_INTERVAL_SECONDS,
+                        SYNC_INTERVAL_SECONDS + SYNC_FLEXTIME_SECONDS))
+                /*
+                 * If a Job with the tag with provided already exists, this new job will replace
+                 * the old one.
+                 */
+                .setReplaceCurrent(true)
+                /* Once the Job is ready, call the builder's build method to return the Job */
+                .build();
+
+        // Schedule the Job with the dispatcher
+        dispatcher.schedule(syncMoviesJob);
         Log.d(LOG_TAG, "Job scheduled");
     }
 
@@ -93,6 +143,8 @@ public class MoviesNetworkDataSource {
         mExecutors.networkIO().execute(() -> {
             try {
                 // TODO: 2019-06-14
+                loadMovies(SORT_BY_POPULARITY);
+                loadMovies(SORT_BY_RATING);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -101,18 +153,16 @@ public class MoviesNetworkDataSource {
 
     private void loadMovies(int sortBy) {
         final TheMovieDbApi theMovieDbApi = RetrofitClientInstance.getRetrofitInstance().create(TheMovieDbApi.class);
-
-
         Call<MoviesResponse> call;
         switch (sortBy) {
             case SORT_BY_POPULARITY:
                 call = (Call<MoviesResponse>) theMovieDbApi.getPopularMovies(BuildConfig.MOVIE_DB_API_KEY);
                 break;
             case SORT_BY_RATING:
-                call = theMovieDbApi.getTopRatedMovies(BuildConfig.MOVIE_DB_API_KEY);
+                call = (Call<MoviesResponse>) theMovieDbApi.getTopRatedMovies(BuildConfig.MOVIE_DB_API_KEY);
                 break;
             default:
-                call = theMovieDbApi.getPopularMovies(BuildConfig.MOVIE_DB_API_KEY);
+                call = (Call<MoviesResponse>) theMovieDbApi.getPopularMovies(BuildConfig.MOVIE_DB_API_KEY);
         }
 
         call.enqueue(new Callback<MoviesResponse>() {
@@ -120,12 +170,14 @@ public class MoviesNetworkDataSource {
             public void onResponse(Call<MoviesResponse> call, Response<MoviesResponse> response) {
 
                 MoviesResponse movieResponse = response.body();
+                mDownloadedMovies.postValue(movieResponse.getMovies());
 
-                List<Movie> movies;
-                movies = movieResponse != null ? movieResponse.getMovies() : null;
-                if (movies != null) {
-                    mDownloadedMovies.postValue(movies);
-                }
+                //List<Movie> movies;
+                //movies = movieResponse != null ? movieResponse.getMovies() : null;
+                //Log.i(LOG_TAG, "loadMovies - onResponse Movies Size:" + movies.size());
+//                if (movies != null) {
+//                    mDownloadedMovies.postValue(movies);
+//                }
             }
 
             @Override

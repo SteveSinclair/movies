@@ -6,7 +6,6 @@ import androidx.room.PrimaryKey;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 
 @Entity(tableName = "movies")
 public class Movie implements Serializable {
@@ -29,7 +28,7 @@ public class Movie implements Serializable {
     private final String originalLanguage;
     @SerializedName("original_title")
     private final String originalTitle;
-//    @SerializedName("genre_ids")
+    //    @SerializedName("genre_ids")
 //    private final ArrayList<Integer> genreIds;
     @SerializedName("backdrop_path")
     private final String backdropPath;
@@ -39,6 +38,17 @@ public class Movie implements Serializable {
     private final String overview;
     @SerializedName("release_date")
     private final String releaseDate;
+
+    public Boolean getFavorite() {
+        return favorite;
+    }
+
+    public void setFavorite(Boolean favorite) {
+        this.favorite = favorite;
+    }
+
+    @SerializedName("favorite")
+    private Boolean favorite;
 
     public Movie(
             Integer id,
@@ -69,6 +79,7 @@ public class Movie implements Serializable {
         this.adult = adult;
         this.overview = overview;
         this.releaseDate = releaseDate;
+        this.favorite = false;
     }
 
     public Integer getVoteCount() {
@@ -126,6 +137,9 @@ public class Movie implements Serializable {
     public String getReleaseDate() {
         return releaseDate;
     }
+
+
+
 }
 
 

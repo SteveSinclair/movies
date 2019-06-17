@@ -5,6 +5,7 @@ import android.content.Context;
 import com.example.android.movies.data.MoviesRepository;
 import com.example.android.movies.data.database.MoviesDatabase;
 import com.example.android.movies.data.network.MoviesNetworkDataSource;
+import com.example.android.movies.ui.MoviesViewModelFactory;
 
 public class InjectorUtils {
 
@@ -21,5 +22,10 @@ public class InjectorUtils {
         provideRepository(context.getApplicationContext());
         AppExecutors executors = AppExecutors.getInstance();
         return MoviesNetworkDataSource.getInstance(context.getApplicationContext(), executors);
+    }
+
+    public static MoviesViewModelFactory provideMoviesViewModelFactory(Context context) {
+        MoviesRepository repository = provideRepository(context.getApplicationContext());
+        return new MoviesViewModelFactory(repository);
     }
 }

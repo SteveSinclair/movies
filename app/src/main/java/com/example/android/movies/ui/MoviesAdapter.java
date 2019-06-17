@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.android.movies.R;
@@ -24,12 +25,11 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
     private static final String TAG = MoviesAdapter.class.getSimpleName();
 
     private final Context mContext;
-    private final List<Movie> mMovieList;
+    private List<Movie> mMovieList;
     private final MovieAdapterOnClickHandler mClickHandler;
 
-    public MoviesAdapter(Context context, List<Movie> movieList, MovieAdapterOnClickHandler onClickHandler) {
+    public MoviesAdapter(Context context, MovieAdapterOnClickHandler onClickHandler) {
         mContext = context;
-        mMovieList = movieList;
         mClickHandler = onClickHandler;
     }
 
@@ -38,6 +38,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
     public MovieViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(mContext);
         View itemView = inflater.inflate(R.layout.movie_list_item, null);
+        itemView.setFocusable(true);
         return new MovieViewHolder(itemView);
     }
 
@@ -59,15 +60,66 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
             return mMovieList.size();
     }
 
+
     public interface MovieAdapterOnClickHandler {
         void OnClick(Movie movie, Bitmap poster);
+    }
+
+
+    /**
+     * Swaps the list used by the MoviesAdapter for its movie data. This method is called by
+     * {@link MainActivity} after a load has finished. When this method is called, we assume we have
+     * a new set of data, so we call notifyDataSetChanged to tell the RecyclerView to update.
+     *
+     * @param newMovies the new list of movies to use as MoviesAdapter's data source
+     */
+    void swapMovies(final List<Movie> newMovies) {
+        // If there was no movies data, then recreate all of the list
+        if (mMovieList == null) {
+            mMovieList = newMovies;
+            notifyDataSetChanged();
+        } else {
+            /*
+             * Otherwise we use DiffUtil to calculate the changes and update accordingly. This
+             * shows the four methods you need to override to return a DiffUtil callback. The
+             * old list is the current list stored in mForecast, where the new list is the new
+             * values passed in from the observing the database.
+             */
+
+            DiffUtil.DiffResult result = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+                @Override
+                public int getOldListSize() {
+                    return mMovieList.size();
+                }
+
+                @Override
+                public int getNewListSize() {
+                    return newMovies.size();
+                }
+
+                @Override
+                public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+                    return mMovieList.get(oldItemPosition).getId() ==
+                            newMovies.get(newItemPosition).getId();
+                }
+
+                @Override
+                public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+                    Movie newMovie = newMovies.get(newItemPosition);
+                    Movie oldMovie = mMovieList.get(oldItemPosition);
+                    return newMovie.getId() == oldMovie.getId();
+                }
+            });
+            mMovieList = newMovies;
+            result.dispatchUpdatesTo(this);
+        }
     }
 
     /*
      * MovieViewHolder
      */
     class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-
+        // TODO: 2019-06-17  
         final ImageView imageViewPoster;
 
         public MovieViewHolder(@NonNull View itemView) {

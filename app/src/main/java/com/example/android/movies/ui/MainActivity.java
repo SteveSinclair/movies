@@ -2,37 +2,34 @@ package com.example.android.movies.ui;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.ProgressBar;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.util.Log;
-import android.widget.Toast;
 
-import com.example.android.movies.BuildConfig;
 import com.example.android.movies.R;
 import com.example.android.movies.data.entities.Movie;
-import com.example.android.movies.data.entities.MoviesResponse;
-import com.example.android.movies.data.network.TheMovieDbApi;
-import com.example.android.movies.data.network.RetrofitClientInstance;
+import com.example.android.movies.utilities.InjectorUtils;
 
-import java.util.List;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+public class MainActivity extends AppCompatActivity implements MoviesAdapter.MovieAdapterOnClickHandler {
+    public static final int SORT_BY_POPULARITY = 0;
+    public static final int SORT_BY_RATING = 1;
+    public static final int SORT_BY_FAVORITE = 2;
 
-public class MainActivity extends AppCompatActivity implements MoviesAdapter.MovieAdapterOnClickHandler{
-
-    private static final int SORT_BY_POPULARITY = 0;
-    private static final int SORT_BY_RATING = 1;
     private static final String TAG = MainActivity.class.getSimpleName();
+    private ProgressBar mprogressBar;
+    private MoviesAdapter mMoviesAdapter;
     private RecyclerView mRecyclerView;
-    private List<Movie> mMovies;
-    private final TheMovieDbApi theMovieDbApi = RetrofitClientInstance.getRetrofitInstance().create(TheMovieDbApi.class);
-    MoviesAdapter mMoviesAdapter;
+    private int mPosition = RecyclerView.NO_POSITION;
+    private MoviesViewModel mViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,57 +38,72 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        setTitle("Movies");
+
+        mprogressBar = findViewById(R.id.pb_loading_indicator);
 
         mRecyclerView = findViewById(R.id.moviesRecyclerView);
         RecyclerView.LayoutManager layoutManager = new GridLayoutManager(MainActivity.this, 2);
         mRecyclerView.setLayoutManager(layoutManager);
         mRecyclerView.setHasFixedSize(true);
 
+        mMoviesAdapter = new MoviesAdapter(this, this);
+        mRecyclerView.setAdapter(mMoviesAdapter);
 
-        loadMovies(SORT_BY_POPULARITY);
+        MoviesViewModelFactory factory = InjectorUtils.provideMoviesViewModelFactory(this.getApplicationContext());
+        mViewModel = ViewModelProviders.of(this, factory).get(MoviesViewModel.class);
+
+        mViewModel.getMovies().observe(this, moviesList -> {
+            mMoviesAdapter.swapMovies(moviesList);
+            if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
+            mRecyclerView.smoothScrollToPosition(mPosition);
+
+            // Show the movies list or the loading screen based on whether the movies data exists
+            // and is loaded
+            if (moviesList != null && moviesList.size() != 0)
+                showMoviesDataView();
+            else
+                showLoading();
+        });
+
     }
 
-    private void loadMovies(int sortBy) {
-        
-        Call<MoviesResponse> call;
-        switch (sortBy) {
-            case SORT_BY_POPULARITY:
-                call = theMovieDbApi.getPopularMovies(BuildConfig.MOVIE_DB_API_KEY);
-                setTitle(R.string.titlePopular);
-                break;
-            case SORT_BY_RATING:
-                call = theMovieDbApi.getTopRatedMovies(BuildConfig.MOVIE_DB_API_KEY);
-                setTitle(R.string.titleRating);
-                break;
-            default:
-                call = theMovieDbApi.getPopularMovies(BuildConfig.MOVIE_DB_API_KEY);
-                setTitle(R.string.titlePopular);
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.miFavorites:
+                setTitle("Favorite Movies");
+                mViewModel.getFavoriteMovies();
+                return true;
+            case R.id.miHighestRated:
+                setTitle("Highest Rated Movies");
+                mViewModel.getMoviesByVoteCount();
+                return true;
+            case R.id.miMostPopular:
+                setTitle("Popular Movies");
+                mViewModel.getMoviesByPopularity();
+                return true;
         }
 
-        call.enqueue(new Callback<MoviesResponse>() {
-            @Override
-            public void onResponse(Call<MoviesResponse> call, Response<MoviesResponse> response) {
-
-                MoviesResponse movieResponse = response.body();
-
-
-                mMovies = movieResponse != null ? movieResponse.getMovies() : null;
-                if (mMovies != null) {
-                    showMovies(mMovies);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<MoviesResponse> call, Throwable t) {
-                Log.e(TAG, t.getMessage());
-                Toast.makeText(getApplicationContext(), t.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        });
+        return super.onOptionsItemSelected(item);
     }
 
-    private void showMovies(List<Movie> mMovies) {
-        mMoviesAdapter = new MoviesAdapter(this, mMovies, this);
-        mRecyclerView.setAdapter(mMoviesAdapter);
+
+    private void showMoviesDataView() {
+        mprogressBar.setVisibility(View.INVISIBLE);
+        mRecyclerView.setVisibility(View.VISIBLE);
+    }
+
+    private void showLoading() {
+        mRecyclerView.setVisibility(View.INVISIBLE);
+        mprogressBar.setVisibility(View.VISIBLE);
     }
 
     @Override

@@ -12,9 +12,10 @@ public class MoviesSyncIntentService extends IntentService {
 
     private static final String LOG_TAG = MoviesSyncIntentService.class.getSimpleName();
 
-    public MoviesSyncIntentService(String name) {
+    public MoviesSyncIntentService() {
         super("MoviesSyncIntentService");
     }
+
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
