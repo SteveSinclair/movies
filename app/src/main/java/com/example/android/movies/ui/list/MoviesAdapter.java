@@ -1,4 +1,4 @@
-package com.example.android.movies.ui;
+package com.example.android.movies.ui.list;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -62,7 +62,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MovieViewH
 
 
     public interface MovieAdapterOnClickHandler {
-        void OnClick(Movie movie, Bitmap poster);
+        void OnClick(int movieId);
     }
 
 

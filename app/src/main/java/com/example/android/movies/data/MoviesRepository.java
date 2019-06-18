@@ -3,6 +3,7 @@ package com.example.android.movies.data;
 import android.util.Log;
 
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import com.example.android.movies.data.database.MoviesDao;
 import com.example.android.movies.data.network.MoviesNetworkDataSource;
@@ -104,6 +105,10 @@ public class MoviesRepository {
     public LiveData<List<Movie>> getMoviesFavorites() {
         initializeData();
         return mMoviesDao.getMoviesFavorites();
+    }
+
+    public LiveData<Movie> getMovie(int moiveId){
+        return mMoviesDao.getMovie(moiveId);
     }
     /**
      * Checks if there are enough days of future weather for the app to display all the needed data.

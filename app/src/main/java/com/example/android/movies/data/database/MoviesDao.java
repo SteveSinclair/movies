@@ -1,6 +1,7 @@
 package com.example.android.movies.data.database;
 
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
@@ -26,11 +27,13 @@ public interface MoviesDao {
     @Query("select * from movies order by voteCount desc")
     LiveData<List<Movie>> getMoviesByVoteCount();
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    void bulkInsert(Movie... movies);
+    @Query("select * from movies where id = :id")
+    LiveData<Movie> getMovie(int id);
 
     @Query("UPDATE movies SET favorite=:favorite WHERE id = :id")
-    void setFavorite(Boolean favorite, int id);
+    void setFavorite(boolean favorite, int id);
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    void bulkInsert(Movie... movies);
 
 }

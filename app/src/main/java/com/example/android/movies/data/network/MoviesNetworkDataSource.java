@@ -102,7 +102,7 @@ public class MoviesNetworkDataSource {
                  * device is charging. It might be a good idea to include a preference for this,
                  * as some users may not want to download any data on their mobile plan. ($$$)
                  */
-                .setConstraints(Constraint.ON_ANY_NETWORK)
+                .setConstraints(Constraint.ON_UNMETERED_NETWORK)
                 /*
                  * setLifetime sets how long this job should persist. The options are to keep the
                  * Job "forever" or to have it die the next time the device boots up.

@@ -1,7 +1,9 @@
-package com.example.android.movies.ui;
+package com.example.android.movies.ui.list;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.android.movies.R;
 import com.example.android.movies.data.entities.Movie;
+import com.example.android.movies.ui.detail.DetailsActivity;
 import com.example.android.movies.utilities.InjectorUtils;
 
 
@@ -54,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
         mViewModel = ViewModelProviders.of(this, factory).get(MoviesViewModel.class);
 
         mViewModel.getMovies().observe(this, moviesList -> {
+            Log.i(TAG, "onCreate: mViewModel.getMovies().observe");
             mMoviesAdapter.swapMovies(moviesList);
             if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
             mRecyclerView.smoothScrollToPosition(mPosition);
@@ -78,16 +82,29 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         switch (id) {
+            // TODO: 2019-06-18 I'm stuck on this , can't get it to refresh
             case R.id.miFavorites:
                 setTitle("Favorite Movies");
-                mViewModel.getFavoriteMovies();
+                mViewModel.getFavoriteMovies().observe(this, moviesList -> {
+                    Log.i(TAG, "onCreate: mViewModel.getMovies().observe");
+                    mMoviesAdapter.swapMovies(moviesList);
+                    if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
+                    mRecyclerView.smoothScrollToPosition(mPosition);
+
+                    // Show the movies list or the loading screen based on whether the movies data exists
+                    // and is loaded
+                    if (moviesList != null && moviesList.size() != 0)
+                        showMoviesDataView();
+                    else
+                        showLoading();
+                });
                 return true;
             case R.id.miHighestRated:
                 setTitle("Highest Rated Movies");
                 mViewModel.getMoviesByVoteCount();
                 return true;
             case R.id.miMostPopular:
-                setTitle("Popular Movies");
+                setTitle("Popular Movies"); // TODO: 2019-06-18 put this in viewmodel
                 mViewModel.getMoviesByPopularity();
                 return true;
         }
@@ -107,7 +124,10 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
     }
 
     @Override
-    public void OnClick(Movie movie, Bitmap poster) {
-        // TODO: 2019-06-13  
+    public void OnClick(int movieId) {
+        Intent intent = new Intent(MainActivity.this, DetailsActivity.class);
+
+        intent.putExtra(DetailsActivity.MOVIE_ID_EXTRA, movieId);
+        startActivity(intent);
     }
 }
