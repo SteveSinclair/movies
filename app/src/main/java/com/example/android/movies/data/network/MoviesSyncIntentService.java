@@ -20,8 +20,7 @@ public class MoviesSyncIntentService extends IntentService {
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
         Log.d(LOG_TAG, "Intent service started");
-        MoviesNetworkDataSource networkDataSource =
-                InjectorUtils.provideNetworkDataSource(this.getApplicationContext());
+        MoviesNetworkDataSource networkDataSource = InjectorUtils.provideNetworkDataSource(this.getApplicationContext());
         networkDataSource.fetchMovies();
     }
 }

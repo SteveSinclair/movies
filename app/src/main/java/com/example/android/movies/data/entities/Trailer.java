@@ -1,10 +1,18 @@
 package com.example.android.movies.data.entities;
 
+import androidx.annotation.NonNull;
+import androidx.room.Entity;
+import androidx.room.Ignore;
+import androidx.room.PrimaryKey;
+
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 
+@Entity(tableName = "trailers")
 public class Trailer implements Serializable {
+    @PrimaryKey()
+    @NonNull()
     @SerializedName("id")
     private final String id; //: "5c40c5ef9251416b02b10d44",
     @SerializedName("iso_639_1") //: "en",
@@ -21,7 +29,21 @@ public class Trailer implements Serializable {
     private final String resolution;
     @SerializedName("type")//: "Trailer"
     private final String type;
+    @SerializedName("movie_id")
+    private int movieId;
 
+    public Trailer(String id, String language, String country, String key, String name, String site, String resolution, String type, int movieId) {
+        this.id = id;
+        this.language = language;
+        this.country = country;
+        this.key = key;
+        this.name = name;
+        this.site = site;
+        this.resolution = resolution;
+        this.type = type;
+        this.movieId = movieId;
+    }
+    @Ignore()
     public Trailer(String id, String language, String country, String key, String name, String site, String resolution, String type) {
         this.id = id;
         this.language = language;
@@ -31,8 +53,8 @@ public class Trailer implements Serializable {
         this.site = site;
         this.resolution = resolution;
         this.type = type;
+        movieId = 0;
     }
-
     public String getId() {
         return id;
     }
@@ -63,5 +85,12 @@ public class Trailer implements Serializable {
 
     public String getType() {
         return type;
+    }
+    public int getMovieId() {
+        return movieId;
+    }
+
+    public void setMovieId(int movieId) {
+        this.movieId = movieId;
     }
 }

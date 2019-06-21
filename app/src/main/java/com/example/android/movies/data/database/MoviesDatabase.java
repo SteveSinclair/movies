@@ -8,10 +8,12 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import com.example.android.movies.data.entities.Movie;
+import com.example.android.movies.data.entities.Review;
+import com.example.android.movies.data.entities.Trailer;
 
 import static androidx.room.Room.*;
 
-@Database(entities = {Movie.class}, version = 1, exportSchema = false)
+@Database(entities = {Movie.class, Trailer.class, Review.class}, version = 1, exportSchema = true)
 @TypeConverters(DateConverter.class)
 public abstract class MoviesDatabase extends RoomDatabase {
 
@@ -26,8 +28,11 @@ public abstract class MoviesDatabase extends RoomDatabase {
         Log.d(LOG_TAG, "Getting the database");
         if (sInstance == null) {
             synchronized (LOCK) {
-                sInstance = databaseBuilder(context.getApplicationContext(),
-                        MoviesDatabase.class, MoviesDatabase.DATABASE_NAME).build();
+                sInstance = databaseBuilder(
+                        context.getApplicationContext(),
+                        MoviesDatabase.class,
+                        MoviesDatabase.DATABASE_NAME)
+                        .build();
                 Log.d(LOG_TAG, "Made new database");
             }
         }

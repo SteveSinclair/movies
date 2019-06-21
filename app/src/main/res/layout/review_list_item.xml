@@ -3,40 +3,34 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:layout_height="wrap_content">
+
 
     <TextView
         android:id="@+id/textViewAuthorLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:padding="6dp"
         android:text="@string/author"
-        android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        app:layout_constraintStart_toStartOf="parent"
+        android:textSize="@dimen/title_text_size"
+        app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/textViewAuthorName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        app:layout_constraintBottom_toBottomOf="@+id/textViewAuthorLabel"
-        app:layout_constraintStart_toEndOf="@+id/textViewAuthorLabel"
+        android:layout_marginTop="8dp"
+        android:padding="6dp"
+        app:layout_constraintStart_toEndOf="@id/textViewAuthorLabel"
+
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Steve Sinclair" />
 
     <TextView
         android:id="@+id/textViewReview"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textViewAuthorLabel"
-        tools:text="I would not pay to see it. I did see it for free already...so at least, I was not cheated of my money [&quot;I laughed, I cried, I kissed $10 good-bye!&quot;--most other movies]. I saw sneak preview a few months back and it was the full-length feature but it was missing music in the end credit section and may have some added additional editing since then. What I did see, it was on par with Thor: Dark World in quality and has higher wokeness than Han Solo and Star War: Last Jedi. Probably worst Marvel movie since the start of this universe started with the great Iron Man...only thing that could have been worse if Inhuman movie was made. So hold on to your money and maybe watch this at 2nd run theater ($1.75 each...maybe $3 at most) or online free...so you know how this added character will lessen the Avenger's End Game plot. The CGI special effects are just okay but the simpleton story, underwhelming acting and almost-no character development are at the expense to make this the tops of any recent movies with its wokeness and identity politics…And Brie Larson character is just boring with no depth…just like Disney did to current Star Wars movies' female lead. DEFINITELY do NOT spend the money to see it on IMAX or any other expensive premium screenings or waiting in line on opening weekend. Maybe newer version (a few years back) Ghostbust(-h)ers was slightly better...which is not saying much. Already seeing highly rated tweets from critics, I am sure these are the same movie critics that gave great ratings to last years movies, &quot;The Favourite&quot; and &quot;Sorry to Bother You&quot;. Yeah, Don't see this either!" />
+        android:padding="6dp"
+        app:layout_constraintTop_toBottomOf="@id/textViewAuthorLabel" />
 </androidx.constraintlayout.widget.ConstraintLayout>

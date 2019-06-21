@@ -11,6 +11,10 @@ import androidx.lifecycle.MutableLiveData;
 import com.example.android.movies.BuildConfig;
 import com.example.android.movies.data.entities.Movie;
 import com.example.android.movies.data.entities.MoviesResponse;
+import com.example.android.movies.data.entities.Review;
+import com.example.android.movies.data.entities.ReviewResponse;
+import com.example.android.movies.data.entities.Trailer;
+import com.example.android.movies.data.entities.TrailerResponse;
 import com.example.android.movies.utilities.AppExecutors;
 
 import com.firebase.jobdispatcher.Constraint;
@@ -49,11 +53,15 @@ public class MoviesNetworkDataSource {
     // LiveData storing the latest downloaded movies
     private final MutableLiveData<Movie[]> mDownloadedMovies;
     private final AppExecutors mExecutors;
+    private final MutableLiveData<Trailer[]> mDownloadedTrailers;
+    private final MutableLiveData<Review[]> mDownloadedReviews;
 
     public MoviesNetworkDataSource(Context context, AppExecutors appExecutors) {
         this.mContext = context;
         this.mExecutors = appExecutors;
         this.mDownloadedMovies = new MutableLiveData<Movie[]>();
+        this.mDownloadedTrailers = new MutableLiveData<Trailer[]>();
+        this.mDownloadedReviews = new MutableLiveData<Review[]>();
     }
 
     /**
@@ -70,7 +78,7 @@ public class MoviesNetworkDataSource {
         return sInstance;
     }
 
-    public LiveData<Movie[]> getCurrentMovies() {
+    public LiveData<Movie[]> getDownloadedMovies() {
         return mDownloadedMovies;
     }
 
@@ -109,11 +117,11 @@ public class MoviesNetworkDataSource {
                  */
                 .setLifetime(Lifetime.FOREVER)
                 /*
-                 * We want Sunshine's weather data to stay up to date, so we tell this Job to recur.
+                 * We want Movie's weather data to stay up to date, so we tell this Job to recur.
                  */
                 .setRecurring(true)
                 /*
-                 * We want the weather data to be synced every 3 to 4 hours. The first argument for
+                 * We want the movie data to be synced every 3 to 4 hours. The first argument for
                  * Trigger's static executionWindow method is the start of the time frame when the
                  * sync should be performed. The second argument is the latest point in time at
                  * which the data should be synced. Please note that this end time is not
@@ -153,7 +161,9 @@ public class MoviesNetworkDataSource {
 
     private void loadMovies(int sortBy) {
         final TheMovieDbApi theMovieDbApi = RetrofitClientInstance.getRetrofitInstance().create(TheMovieDbApi.class);
+
         Call<MoviesResponse> call;
+
         switch (sortBy) {
             case SORT_BY_POPULARITY:
                 call = (Call<MoviesResponse>) theMovieDbApi.getPopularMovies(BuildConfig.MOVIE_DB_API_KEY);
@@ -170,14 +180,15 @@ public class MoviesNetworkDataSource {
             public void onResponse(Call<MoviesResponse> call, Response<MoviesResponse> response) {
 
                 MoviesResponse movieResponse = response.body();
-                mDownloadedMovies.postValue(movieResponse.getMovies());
-
-                //List<Movie> movies;
-                //movies = movieResponse != null ? movieResponse.getMovies() : null;
-                //Log.i(LOG_TAG, "loadMovies - onResponse Movies Size:" + movies.size());
-//                if (movies != null) {
-//                    mDownloadedMovies.postValue(movies);
-//                }
+                Movie[] movies = movieResponse.getMovies();
+                if (movies != null) {
+                    mDownloadedMovies.postValue(movies);
+                    for (Movie movie : movies
+                    ) {
+                        loadTrailers(movie.getId());
+                        loadReviews(movie.getId());
+                    }
+                }
             }
 
             @Override
@@ -185,6 +196,79 @@ public class MoviesNetworkDataSource {
                 Log.e(LOG_TAG, t.getMessage());
             }
         });
+
+
     }
 
+    private void loadTrailers(int movieId) {
+        final TheMovieDbApi theMovieDbApi = RetrofitClientInstance.getRetrofitInstance().create(TheMovieDbApi.class);
+
+        Call<TrailerResponse> call;
+
+        call = (Call<TrailerResponse>) theMovieDbApi.getTrailers(movieId, BuildConfig.MOVIE_DB_API_KEY, "en-us");
+
+        call.enqueue(new Callback<TrailerResponse>() {
+            @Override
+            public void onResponse(Call<TrailerResponse> call, Response<TrailerResponse> response) {
+
+                TrailerResponse trailerResponse = response.body();
+                if (trailerResponse != null) {
+                    Trailer[] trailers = trailerResponse.getTrailers();
+                    if (trailers != null) {
+                        for (Trailer trailer : trailers
+                        ) {
+                            trailer.setMovieId(movieId);
+                        }
+                        mDownloadedTrailers.postValue(trailers);
+                    }
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<TrailerResponse> call, Throwable t) {
+                Log.e(LOG_TAG, t.getMessage());
+            }
+        });
+    }
+
+    public LiveData<Trailer[]> getDownloadedTrailers() {
+        return mDownloadedTrailers;
+    }
+
+    private void loadReviews(int movieId) {
+        final TheMovieDbApi theMovieDbApi = RetrofitClientInstance.getRetrofitInstance().create(TheMovieDbApi.class);
+
+        Call<ReviewResponse> call;
+
+        call = (Call<ReviewResponse>) theMovieDbApi.getReviews(movieId, BuildConfig.MOVIE_DB_API_KEY, "en-us");
+
+        call.enqueue(new Callback<ReviewResponse>() {
+            @Override
+            public void onResponse(Call<ReviewResponse> call, Response<ReviewResponse> response) {
+
+                ReviewResponse reviewResponse = response.body();
+                if (reviewResponse != null) {
+                    Review[] reviews = reviewResponse.getReviews();
+                    if (reviews != null) {
+                        for (Review review:reviews
+                             ) {
+                            review.setMovieId(movieId);
+                        }
+                        mDownloadedReviews.postValue(reviews);
+                    }
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<ReviewResponse> call, Throwable t) {
+                Log.e(LOG_TAG, t.getMessage());
+            }
+        });
+    }
+
+    public LiveData<Review[]> getDownloadedReviews() {
+        return mDownloadedReviews;
+    }
 }

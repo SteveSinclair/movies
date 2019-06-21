@@ -22,7 +22,7 @@ import com.example.android.movies.ui.detail.DetailsActivity;
 import com.example.android.movies.utilities.InjectorUtils;
 
 
-public class MainActivity extends AppCompatActivity implements MoviesAdapter.MovieAdapterOnClickHandler {
+public class MainActivity extends AppCompatActivity implements MoviesAdapter.MovieAdapterOnItemClickHandler {
     public static final int SORT_BY_POPULARITY = 0;
     public static final int SORT_BY_RATING = 1;
     public static final int SORT_BY_FAVORITE = 2;
@@ -82,11 +82,10 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         switch (id) {
-            // TODO: 2019-06-18 I'm stuck on this , can't get it to refresh
             case R.id.miFavorites:
                 setTitle("Favorite Movies");
                 mViewModel.getFavoriteMovies().observe(this, moviesList -> {
-                    Log.i(TAG, "onCreate: mViewModel.getMovies().observe");
+                    Log.i(TAG, "onCreate: mViewModel.getFavoriteMovies().observe");
                     mMoviesAdapter.swapMovies(moviesList);
                     if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
                     mRecyclerView.smoothScrollToPosition(mPosition);
@@ -101,11 +100,35 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
                 return true;
             case R.id.miHighestRated:
                 setTitle("Highest Rated Movies");
-                mViewModel.getMoviesByVoteCount();
+                mViewModel.getMoviesByVoteCount().observe(this, moviesList -> {
+                    Log.i(TAG, "onCreate: mViewModel.getMoviesByVoteCount().observe");
+                    mMoviesAdapter.swapMovies(moviesList);
+                    if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
+                    mRecyclerView.smoothScrollToPosition(mPosition);
+
+                    // Show the movies list or the loading screen based on whether the movies data exists
+                    // and is loaded
+                    if (moviesList != null && moviesList.size() != 0)
+                        showMoviesDataView();
+                    else
+                        showLoading();
+                });
                 return true;
             case R.id.miMostPopular:
-                setTitle("Popular Movies"); // TODO: 2019-06-18 put this in viewmodel
-                mViewModel.getMoviesByPopularity();
+                setTitle("Popular Movies");
+                mViewModel.getMoviesByPopularity().observe(this, moviesList -> {
+                    Log.i(TAG, "onCreate: mViewModel.getMoviesByPopularity().observe");
+                    mMoviesAdapter.swapMovies(moviesList);
+                    if (mPosition == RecyclerView.NO_POSITION) mPosition = 0;
+                    mRecyclerView.smoothScrollToPosition(mPosition);
+
+                    // Show the movies list or the loading screen based on whether the movies data exists
+                    // and is loaded
+                    if (moviesList != null && moviesList.size() != 0)
+                        showMoviesDataView();
+                    else
+                        showLoading();
+                });
                 return true;
         }
 
@@ -124,10 +147,10 @@ public class MainActivity extends AppCompatActivity implements MoviesAdapter.Mov
     }
 
     @Override
-    public void OnClick(int movieId) {
+    public void OnItemClick(int movieId) {
         Intent intent = new Intent(MainActivity.this, DetailsActivity.class);
-
         intent.putExtra(DetailsActivity.MOVIE_ID_EXTRA, movieId);
         startActivity(intent);
+
     }
 }

@@ -3,9 +3,10 @@ package com.example.android.movies.data;
 import android.util.Log;
 
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 
 import com.example.android.movies.data.database.MoviesDao;
+import com.example.android.movies.data.entities.Review;
+import com.example.android.movies.data.entities.Trailer;
 import com.example.android.movies.data.network.MoviesNetworkDataSource;
 import com.example.android.movies.data.entities.Movie;
 import com.example.android.movies.utilities.AppExecutors;
@@ -14,7 +15,7 @@ import java.util.List;
 
 public class MoviesRepository {
 
-    private static final String LOG_TAG = MoviesRepository.class.getSimpleName();
+    private static final String TAG = MoviesRepository.class.getSimpleName();
 
     // For Singleton instantiation
     private static final Object LOCK = new Object();
@@ -36,27 +37,46 @@ public class MoviesRepository {
 
         // As long as the repository exists, observe the network LiveData.
         // If that LiveData changes, update the database.
-        LiveData<Movie[]> networkData = mMoviesNetworkDataSource.getCurrentMovies();
+        LiveData<Movie[]> networkMovies = mMoviesNetworkDataSource.getDownloadedMovies();
 
-        networkData.observeForever(newMoviesFromNetwork -> {
+        networkMovies.observeForever(newDownloadedMovies -> {
             mExecutors.diskIO().execute(() -> {
                 // Insert our new movies data into Movies's database
-                // TODO: 2019-06-17 this looks wrong
-                mMoviesDao.bulkInsert(newMoviesFromNetwork);
-                Log.d(LOG_TAG, "New values inserted");
+                mMoviesDao.bulkInsertMovies(newDownloadedMovies);
+                Log.i(TAG, "Movies Repository: inserted downloaded movies");
+
             });
         });
+
+        LiveData<Review[]> networkReviews = mMoviesNetworkDataSource.getDownloadedReviews();
+
+        networkReviews.observeForever(newDownloadedReviews -> {
+            mExecutors.diskIO().execute(() -> {
+                moviesDao.bulkInsertReviews(newDownloadedReviews);
+                Log.i(TAG, "MoviesRepository: insert downloaded reviews ");
+            });
+        });
+
+        LiveData<Trailer[]> networkTrailers = mMoviesNetworkDataSource.getDownloadedTrailers();
+
+        networkTrailers.observeForever(newDownloadedTrailers -> {
+            mExecutors.diskIO().execute(() -> {
+                moviesDao.bulkInsertTrailers(newDownloadedTrailers);
+                Log.i(TAG, "MoviesRepository: insert downloaded trailers ");
+            });
+        });
+
     }
 
     public synchronized static MoviesRepository getInstance(
             MoviesDao moviesDao,
             MoviesNetworkDataSource moviesNetworkDataSource,
             AppExecutors executors) {
-        Log.d(LOG_TAG, "Getting the repository");
+        Log.d(TAG, "Getting the repository");
         if (sInstance == null) {
             synchronized (LOCK) {
                 sInstance = new MoviesRepository(moviesDao, moviesNetworkDataSource, executors);
-                Log.d(LOG_TAG, "Made new repository");
+                Log.d(TAG, "Made new repository");
             }
         }
         return sInstance;
@@ -98,25 +118,37 @@ public class MoviesRepository {
         initializeData();
         return mMoviesDao.getMoviesByPopularity();
     }
+
     public LiveData<List<Movie>> getMoviesByVoteCount() {
         initializeData();
         return mMoviesDao.getMoviesByVoteCount();
     }
+
     public LiveData<List<Movie>> getMoviesFavorites() {
         initializeData();
         return mMoviesDao.getMoviesFavorites();
     }
 
-    public LiveData<Movie> getMovie(int moiveId){
+    public LiveData<Movie> getMovie(int moiveId) {
         return mMoviesDao.getMovie(moiveId);
     }
-    /**
-     * Checks if there are enough days of future weather for the app to display all the needed data.
-     *
-     * @return Whether a fetch is needed
-     */
+
     private boolean isFetchNeeded() {
         return (true);  // TODO: 2019-06-14  
+    }
+
+    public LiveData<List<Review>> getReviews(int movieId) {
+        return mMoviesDao.getReviews(movieId);
+    }
+
+    public LiveData<List<Trailer>> getTrailers(int movieId) {
+        return mMoviesDao.getTrailers(movieId);
+    }
+
+    public void setFavorite(Boolean isFavorite, int movieId) {
+        mExecutors.diskIO().execute(() -> {
+            mMoviesDao.setFavorite(isFavorite, movieId);
+        });
     }
 
     /**
@@ -128,3 +160,4 @@ public class MoviesRepository {
         mMoviesNetworkDataSource.startFetchMoviesService();
     }
 }
+

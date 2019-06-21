@@ -8,9 +8,9 @@ public class TrailerResponse {
     @SerializedName("id")
     private final Integer id;
     @SerializedName("results")
-    private final ArrayList<Trailer> trailers;
+    private final Trailer[] trailers;
 
-    public TrailerResponse(Integer id, ArrayList<Trailer> trailers) {
+    public TrailerResponse(Integer id, Trailer[] trailers) {
         this.id = id;
         this.trailers = trailers;
     }
@@ -19,7 +19,7 @@ public class TrailerResponse {
         return id;
     }
 
-    public ArrayList<Trailer> getTrailers() {
+    public Trailer[] getTrailers() {
         return trailers;
     }
 }

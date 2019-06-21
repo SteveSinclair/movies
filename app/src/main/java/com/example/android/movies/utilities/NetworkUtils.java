@@ -1,4 +1,4 @@
-package com.example.android.movies.data.network;
+package com.example.android.movies.utilities;
 
 import android.net.Uri;
 
@@ -24,5 +24,10 @@ public class NetworkUtils {
         }
         return url;
 
+    }
+
+    public static Uri buildTrailerUri(String trailerKey) {
+        Uri uri = Uri.parse("https://www.youtube.com/watch").buildUpon().appendQueryParameter("v", trailerKey).build();
+        return uri;
     }
 }

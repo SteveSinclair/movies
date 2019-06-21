@@ -11,14 +11,14 @@ public class ReviewResponse {
     @SerializedName("page")
     private final Integer page;
     @SerializedName("results")
-    private final ArrayList<Review> reviews;
+    private final Review[] reviews;
     @SerializedName("total_pages")
     private final Integer totalPages;
     @SerializedName("total_results")
     private final Integer totalResults;
 
 
-    public ReviewResponse(Integer id, Integer page, ArrayList<Review> reviews, Integer totalPages, Integer totalResults) {
+    public ReviewResponse(Integer id, Integer page, Review[] reviews, Integer totalPages, Integer totalResults) {
         this.id = id;
         this.page = page;
         this.reviews = reviews;
@@ -34,7 +34,7 @@ public class ReviewResponse {
         return page;
     }
 
-    public ArrayList<Review> getReviews() {
+    public Review[] getReviews() {
         return reviews;
     }
 
